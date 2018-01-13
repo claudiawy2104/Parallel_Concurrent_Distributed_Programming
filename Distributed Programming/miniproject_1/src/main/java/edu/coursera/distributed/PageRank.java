@@ -1,6 +1,11 @@
 package edu.coursera.distributed;
 
 import org.apache.spark.api.java.JavaRDD;
+
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.apache.spark.api.java.JavaPairRDD;
 import scala.Tuple2;
 
@@ -49,6 +54,27 @@ public final class PageRank {
     public static JavaPairRDD<Integer, Double> sparkPageRank(
             final JavaPairRDD<Integer, Website> sites,
             final JavaPairRDD<Integer, Double> ranks) {
-        throw new UnsupportedOperationException();
+        
+    	JavaPairRDD<Integer, Double> newRanks =
+    			sites.
+    					join(ranks).
+    					flatMapToPair(kv -> {
+    						Integer webSiteID = kv._1;
+    						Tuple2<Website, Double> value = kv._2;
+    						Website edges = value._1;
+    						Double currentRank = value._2;
+    						
+    						List<Tuple2<Integer, Double>> contribs = 
+    								new LinkedList<>();
+    						Iterator<Integer> iter = edges.edgeIterator();
+    						while (iter.hasNext()) {
+    							final int target = iter.next();
+    							contribs.add(new Tuple2(target,
+    									currentRank / (double) edges.getNEdges()));
+    						}
+    						return contribs;
+    					});
+    	return newRanks.reduceByKey((Double r1, Double r2) -> r1 + r2)
+    			.mapValues(v -> 0.15 + 0.85 * v);
     }
 }

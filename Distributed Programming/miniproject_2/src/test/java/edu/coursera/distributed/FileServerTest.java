@@ -83,7 +83,6 @@ public class FileServerTest extends TestCase {
         final PCDPFilesystem fs = getFilesystem();
         
         Runnable runner = new Runnable () {
-            @Override
             public void run() {
                 try {
                     FileServer server = new FileServer();
